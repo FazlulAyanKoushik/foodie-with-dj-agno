@@ -27,15 +27,23 @@ def sync_restaurant_to_knowledge(restaurant_uid: str):
         # Get knowledge base
         knowledge = get_restaurant_knowledge(str(restaurant.uid))
 
+        # Get all menus for this restaurant to provide a high-level overview
+        menus = Menu.objects.filter(restaurant=restaurant)
+        menu_items_list = [f"- {m.name}: ${m.price}" for m in menus]
+        menu_overview = "\n".join(menu_items_list) if menu_items_list else "No menu items currently available."
+
         # Prepare restaurant document
         restaurant_doc = f"""
-Restaurant: {restaurant.name}
-Description: {restaurant.description}
-Website: {restaurant.website_url or 'N/A'}
-Facebook: {restaurant.facebook_url or 'N/A'}
-Twitter: {restaurant.twitter_url or 'N/A'}
-Instagram: {restaurant.instagram_url or 'N/A'}
-Youtube: {restaurant.youtube_url or 'N/A'}
+RESTAURANT: {restaurant.name}
+DESCRIPTION: {restaurant.description}
+WEBSITE: {restaurant.website_url or 'N/A'}
+FACEBOOK: {restaurant.facebook_url or 'N/A'}
+TWITTER: {restaurant.twitter_url or 'N/A'}
+INSTAGRAM: {restaurant.instagram_url or 'N/A'}
+YOUTUBE: {restaurant.youtube_url or 'N/A'}
+
+FULL MENU OVERVIEW:
+{menu_overview}
 """
         logger.info(f"restaurant_doc:  {restaurant_doc}")
 
@@ -82,15 +90,15 @@ def sync_menu_to_knowledge(menu_uid: str):
             for mi in menu_ingredients
         ]
 
-        # Prepare menu document
+        # Prepare menu document with extra keywords for better search
         menu_doc = f"""
-Menu Item: {menu.name}
-Restaurant: {restaurant.name}
-Description: {menu.description or 'No description provided'}
-Price: ${menu.price}
-Ingredients: {', '.join(ingredient_names) if ingredient_names else 'No ingredients listed'}
+MENU ITEM / FOOD: {menu.name}
+RESTAURANT: {restaurant.name}
+DESCRIPTION: {menu.description or 'No description provided'}
+PRICE: ${menu.price}
+INGREDIENTS: {', '.join(ingredient_names) if ingredient_names else 'No ingredients listed'}
 
-Ingredient Details:
+FOOD DETAILS:
 {chr(10).join(ingredient_details) if ingredient_details else 'No ingredient details available'}
 """
 

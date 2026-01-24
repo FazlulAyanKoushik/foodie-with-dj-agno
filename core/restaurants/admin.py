@@ -8,7 +8,7 @@ class MenuIngredientsConnectorInline(admin.TabularInline):
 
 @admin.register(Restaurant)
 class RestaurantAdmin(admin.ModelAdmin):
-    list_display = ('name', 'owner', 'website_url', 'created_at')
+    list_display = ('id','uid','name', 'owner', 'website_url', 'created_at')
     search_fields = ('name', 'owner__email', 'owner__first_name', 'owner__last_name')
     list_filter = ('created_at',)
     ordering = ('-created_at',)

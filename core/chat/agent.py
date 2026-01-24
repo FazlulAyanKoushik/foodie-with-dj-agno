@@ -11,15 +11,17 @@ class RestaurantAgent:
     AI agent for handling restaurant-related queries with RAG.
     """
 
-    def __init__(self, restaurant_uid: str, knowledge: Knowledge):
+    def __init__(self, restaurant_uid: str, restaurant_name: str, knowledge: Knowledge):
         """
         Initialize the restaurant agent.
 
         Args:
             restaurant_uid: Unique identifier for the restaurant
+            restaurant_name: Display name of the restaurant
             knowledge: Knowledge base instance for this restaurant
         """
         self.restaurant_uid = restaurant_uid
+        self.restaurant_name = restaurant_name
         self.knowledge = knowledge
 
         # Initialize OpenAI model
@@ -31,19 +33,20 @@ class RestaurantAgent:
 
         # Create Agno agent with knowledge base and memory
         self.agent = Agent(
-            name="Restaurant Assistant",
+            name=f"{restaurant_name} Assistant",
             model=self.model,
             knowledge=knowledge,
             # Enable RAG features
             search_knowledge=True,
             add_knowledge_to_context=True,
-            description="A helpful assistant that provides restaurant details, menu items, and handles dietary queries.",
+            description=f"Official AI assistant for {self.restaurant_name}.",
             instructions=[
-                "You are a professional restaurant assistant.",
-                "Your PRIMARY RESOURCE is the knowledge base. ALWAYS search it first for restaurant information. ",
-                "USE the 'CONVERSATION HISTORY SUMMARY' (provided in context) to remember user names, preferences, and previous parts of this conversation.",
-                "When asked about the restaurant's website, social media, or contact details, use the `search_knowledge_base` tool.",
-                "Provide detailed menu descriptions and prices from the knowledge base.",
+                f"You are the professional and official AI assistant for {self.restaurant_name}.",
+                "Your PRIMARY RESOURCE is the knowledge base. ALWAYS search it first for ANY restaurant or menu information.",
+                "USE the 'CONVERSATION HISTORY SUMMARY' (provided in context) to remember user names and preferences.",
+                "When asked about the MENU, food items, ingredients, prices, website, or social media, ALWAYS use the `search_knowledge_base` tool.",
+                "DO NOT say you don't have information until you have actively used the tool to search for keywords like 'menu', 'food', or specific dish names.",
+                "Provide detailed menu descriptions and prices exactly as they appear in the knowledge base.",
                 "Handle allergy queries by suggesting safe items based on the provided ingredient lists.",
                 "Maintain a helpful, friendly, and professional tone.",
             ],
@@ -103,15 +106,16 @@ Please provide an updated, concise version of the summary that includes the late
         return str(response).strip()
 
 
-def create_restaurant_agent(restaurant_uid: str, knowledge: Knowledge) -> RestaurantAgent:
+def create_restaurant_agent(restaurant_uid: str, restaurant_name: str, knowledge: Knowledge) -> RestaurantAgent:
     """
     Factory function to create a restaurant agent.
 
     Args:
         restaurant_uid: Unique identifier for the restaurant
+        restaurant_name: Name of the restaurant
         knowledge: Knowledge base instance
 
     Returns:
         Configured RestaurantAgent instance
     """
-    return RestaurantAgent(restaurant_uid, knowledge)
+    return RestaurantAgent(restaurant_uid, restaurant_name, knowledge)

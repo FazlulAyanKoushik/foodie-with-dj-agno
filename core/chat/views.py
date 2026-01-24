@@ -51,8 +51,8 @@ class ChatAPIView(GenericAPIView):
             # Get knowledge base for this restaurant
             knowledge = get_restaurant_knowledge(str(restaurant.uid))
 
-            # Create agent
-            agent = create_restaurant_agent(str(restaurant.uid), knowledge)
+            # Create agent with name context
+            agent = create_restaurant_agent(str(restaurant.uid), restaurant.name, knowledge)
 
             # Get AI response using rolling summary as context
             ai_response = agent.chat(user_message, rolling_summary=thread.summary)
