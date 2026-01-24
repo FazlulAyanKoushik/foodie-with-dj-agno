@@ -39,6 +39,7 @@ LOCAL_APPS = [
     "accounts",
     "commons",
     "restaurants",
+    "chat",
 ]
 
 # Application definition

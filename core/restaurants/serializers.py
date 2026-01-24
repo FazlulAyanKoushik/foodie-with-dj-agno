@@ -67,25 +67,42 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class MenuSerializer(serializers.ModelSerializer):
     ingredient_ids = serializers.ListField(
-        child=serializers.IntegerField(), write_only=True, required=False
+        child=serializers.IntegerField(), required=False, help_text='Ingredient names separated by comma.'
     )
+    ingredient_names = serializers.ListField(
+        child=serializers.CharField(),  required=False, help_text='Ingredient names separated by comma.'
+    )
+
     ingredients = IngredientSerializer(many=True, read_only=True, source='menuingredientsconnector_set.ingredient') # Incorrect source, need to handle deeper but simple for now
 
     class Meta:
         model = Menu
-        fields = ['id', 'restaurant', 'name', 'description', 'image', 'price', 'ingredient_ids', 'ingredients', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at', 'restaurant']
+        fields = ['id', 'restaurant', 'name', 'description', 'image', 'price', 'ingredient_ids', 'ingredient_names', 'ingredients', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'restaurant', 'ingredients']
+        write_only_fields = ['ingredient_ids', 'ingredient_names']
 
     def create(self, validated_data):
         ingredient_ids = validated_data.pop('ingredient_ids', [])
+        ingredient_names = validated_data.pop('ingredient_names', [])
+
+        if ingredient_ids is [] and ingredient_names is []:
+            raise serializers.ValidationError({'ingredients': 'At least one ingredient is required.'})
+
         menu = super().create(validated_data)
 
-        for ingredient_id in ingredient_ids:
-            try:
-                ingredient = Ingredients.objects.get(id=ingredient_id, restaurant=menu.restaurant)
+        if ingredient_names:
+            for ingredient_name in ingredient_names:
+                ingredient, _ = Ingredients.objects.get_or_create(name=ingredient_name, restaurant=menu.restaurant)
                 MenuIngredientsConnector.objects.create(menu=menu, ingredient=ingredient, restaurant=menu.restaurant)
-            except Ingredients.DoesNotExist:
-                pass # or raise error
+
+        if ingredient_ids:
+            for ingredient_id in ingredient_ids:
+                try:
+                    ingredient = Ingredients.objects.get(id=ingredient_id, restaurant=menu.restaurant)
+                    MenuIngredientsConnector.objects.create(menu=menu, ingredient=ingredient,
+                                                            restaurant=menu.restaurant)
+                except Ingredients.DoesNotExist:
+                    pass  # or raise error
         return menu
 
     def update(self, instance, validated_data):
