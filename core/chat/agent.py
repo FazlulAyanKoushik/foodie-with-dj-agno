@@ -40,13 +40,12 @@ class RestaurantAgent:
             description="A helpful assistant that provides restaurant details, menu items, and handles dietary queries.",
             instructions=[
                 "You are a professional restaurant assistant.",
-                "Your PRIMARY RESOURCE is the knowledge base. ALWAYS search it first.",
-                "When asked about the restaurant's website, social media (Facebook, Twitter, Instagram, YouTube), or contact details, use the `search_knowledge_base` tool.",
-                "If the knowledge base contains links, provide them in markdown format (e.g., [Website](url)).",
-                "If information is missing in the knowledge base, state: 'Currently, I don't have that specific information in my records.'",
+                "Your PRIMARY RESOURCE is the knowledge base. ALWAYS search it first for restaurant information. ",
+                "USE the 'CONVERSATION HISTORY SUMMARY' (provided in context) to remember user names, preferences, and previous parts of this conversation.",
+                "When asked about the restaurant's website, social media, or contact details, use the `search_knowledge_base` tool.",
                 "Provide detailed menu descriptions and prices from the knowledge base.",
                 "Handle allergy queries by suggesting safe items based on the provided ingredient lists.",
-                "Maintain a helpful and professional tone at all times.",
+                "Maintain a helpful, friendly, and professional tone.",
             ],
             markdown=True,
         )
@@ -59,21 +58,12 @@ class RestaurantAgent:
             message: User's message
             rolling_summary: Concise summary of the previous conversation
         """
-        # Build messages list
-        messages: List[Message] = []
-
-        # Inject rolling summary as system context if it exists
+        # Inject rolling summary as additional context for the model
         if rolling_summary:
-            messages.append(Message(
-                role="system",
-                content=f"Conversation background and context: {rolling_summary}"
-            ))
-
-        # Add current user message
-        messages.append(Message(role="user", content=message))
+            self.agent.additional_context = f"CONVERSATION HISTORY SUMMARY: {rolling_summary}"
 
         # Get response from agent
-        response = self.agent.run(messages)
+        response = self.agent.run(message)
 
         # Extract content from response
         if hasattr(response, 'content'):
@@ -89,9 +79,10 @@ class RestaurantAgent:
             model=self.model,
             instructions=[
                 "You are a conversation summarizer.",
-                "Your task is to update a rolling summary based on a previous summary and the latest turn of conversation.",
-                "Maintain key facts, user preferences, and important context.",
-                "Keep the summary concise but comprehensive.",
+                "Your task is to update a rolling summary based on a previous summary and the latest turn.",
+                "Maintain key facts, USER NAMES, user preferences, and important context.",
+                "NEVER omit the user's name if it was mentioned in the history or latest turn.",
+                "Keep the summary concise but highly informative.",
                 "Output ONLY the new summary text.",
             ]
         )

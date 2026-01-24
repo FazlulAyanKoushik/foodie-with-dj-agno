@@ -73,3 +73,4 @@ uv.lock
 /core/celerybeat-schedule-wal
 
 AGNET.md
+core/chroma_data/

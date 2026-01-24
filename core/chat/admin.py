@@ -6,7 +6,7 @@ from chat.models import Thread, Message
 @admin.register(Thread)
 class ThreadAdmin(admin.ModelAdmin):
     list_display = (
-        'restaurant', 'user', 'summary_short'
+        'id', 'uid', 'restaurant', 'user', 'summary_short'
     )
 
     def summary_short(self, obj):
