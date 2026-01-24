@@ -27,6 +27,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('accounts.urls')),
     path('api/restaurants/', include('restaurants.urls')),
+    path('api/chat/', include('chat.urls')),
 
     # Swagger/OpenAPI documentation
     path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),

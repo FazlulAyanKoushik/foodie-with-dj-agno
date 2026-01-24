@@ -72,3 +72,4 @@ uv.lock
 /core/celerybeat-schedule-shm
 /core/celerybeat-schedule-wal
 
+AGNET.md

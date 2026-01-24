@@ -1,5 +1,4 @@
 from django.db import models
-
 from commons.models import BaseModel
 
 
@@ -7,7 +6,7 @@ from commons.models import BaseModel
 class Thread(BaseModel):
     restaurant = models.ForeignKey("restaurants.Restaurant", on_delete=models.CASCADE)
     user = models.ForeignKey("accounts.User", on_delete=models.CASCADE, blank=True, null=True)
-    summary = models.TextField()
+    summary = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.restaurant} - {self.user}"
@@ -20,4 +19,3 @@ class Message(BaseModel):
 
     def __str__(self):
         return f"{self.thread}"
-

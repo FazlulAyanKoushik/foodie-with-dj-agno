@@ -1,20 +1,20 @@
 services:
-#  db:
-#    image: postgres:15-alpine
-#    container_name: dj_template_db
-#    environment:
-#      POSTGRES_DB: ${DB_NAME:-postgres}
-#      POSTGRES_USER: ${DB_USER:-postgres}
-#      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-#    volumes:
-#      - postgres_data:/var/lib/postgresql/data
-#    ports:
-#      - "${DB_PORT:-5432}:5432"
-#    healthcheck:
-#      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
+  #  db:
+  #    image: postgres:15-alpine
+  #    container_name: dj_template_db
+  #    environment:
+  #      POSTGRES_DB: ${DB_NAME:-postgres}
+  #      POSTGRES_USER: ${DB_USER:-postgres}
+  #      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+  #    volumes:
+  #      - postgres_data:/var/lib/postgresql/data
+  #    ports:
+  #      - "${DB_PORT:-5432}:5432"
+  #    healthcheck:
+  #      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+  #      interval: 10s
+  #      timeout: 5s
+  #      retries: 5
 
   redis:
     image: redis:7-alpine
@@ -24,7 +24,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -36,8 +36,7 @@ services:
     container_name: dj_template_web
     # In local/dev, use Django's runserver for auto-reload; otherwise use Gunicorn
     command: >-
-      sh -c "cd /app/core &&
-      if [ \"$DJANGO_ENV\" = \"local\" ]; then
+      sh -c "cd /app/core && if [ \"$DJANGO_ENV\" = \"local\" ]; then
         echo 'Starting Django runserver with auto-reload...';
         python manage.py runserver 0.0.0.0:8000;
       else
@@ -49,6 +48,7 @@ services:
       - ./entrypoint.sh:/app/entrypoint.sh
       - static_volume:/app/core/staticfiles
       - media_volume:/app/core/media
+      - chroma_data:/app/chroma_data
     ports:
       - "${PORT:-8000}:8000"
     env_file:
@@ -71,6 +71,7 @@ services:
     command: sh -c "cd /app/core && celery -A core worker --loglevel=${CELERY_LOG_LEVEL:-info}"
     volumes:
       - ./core:/app/core
+      - chroma_data:/app/chroma_data
     env_file:
       - .env
     environment:
@@ -93,7 +94,8 @@ services:
     command: sh -c "cd /app/core && celery -A core beat --loglevel=${CELERY_LOG_LEVEL:-info}"
     volumes:
       - ./core:/app/core
-      - celerybeat_schedule:/app/celerybeat  # Add persistent volume for beat schedule
+      - celerybeat_schedule:/app/celerybeat # Add persistent volume for beat schedule
+      - chroma_data:/app/chroma_data
     env_file:
       - .env
     environment:
@@ -113,11 +115,11 @@ services:
 networks:
   project_network:
     driver: bridge
-
   # At the bottom of the file, add celerybeat_schedule to volumes:
 volumes:
   postgres_data:
   redis_data:
   static_volume:
   media_volume:
-  celerybeat_schedule:  # Add this line
+  celerybeat_schedule: # Add this line
+  chroma_data: # ChromaDB persistent storage
