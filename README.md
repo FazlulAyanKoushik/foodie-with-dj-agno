@@ -1,562 +1,189 @@
-# Django DRF Base Template
+# 🍔 Foodie with DJ Agno
 
-A production-ready Django REST Framework base template project with authentication, Docker support, Celery, Redis, and comprehensive API documentation. This template is designed to be extended for future projects.
+**An AI-Powered SaaS Backend for Restaurant Customer Service**
 
-## ⚡ Quick Start
-
-**Fastest way to get started with Docker:**
-
-```bash
-# 1. Clone and navigate
-git clone <repository-url>
-cd dj-template
-
-# 2. Create .env file (copy from .env.example if available)
-# Edit .env and set DATABASE_TYPE=postgres for Docker
-
-# 3. Start everything
-docker-compose up --build
-
-# 4. Run migrations (in another terminal)
-docker-compose exec web python manage.py migrate
-
-# 5. Access the API
-# http://localhost:8000/swagger/
-```
-
-**For local development without Docker:**
-
-```bash
-# 1. Clone and navigate
-git clone <repository-url>
-cd dj-template
-
-# 2. Install UV (if not installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh  # macOS/Linux
-
-# 3. Install dependencies
-uv sync
-
-# 4. Activate virtual environment
-source .venv/bin/activate  # macOS/Linux
-.venv\Scripts\activate     # Windows
-
-# 5. Run migrations
-cd core
-python manage.py migrate
-
-# 6. Start server
-python manage.py runserver
-```
-
-## 🚀 Features
-
-- **Custom User Model**: Email-based authentication with JWT tokens
-- **Django REST Framework**: Full REST API support
-- **JWT Authentication**: Secure token-based authentication with SimpleJWT
-- **API Documentation**: Swagger/OpenAPI documentation with DRF YASG
-- **Docker Support**: Complete Docker and Docker Compose setup
-- **UV Package Manager**: Fast Python package management
-- **Celery & Redis**: Asynchronous task processing
-- **Environment-based Settings**: Separate configurations for local, dev, and production
-- **Dynamic Database**: Support for both SQLite and PostgreSQL
-- **CORS Support**: Configured for cross-origin requests
-- **Database Seeding**: Automated database seeding script
-
-## 📋 Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-- **Python 3.13+**
-- **UV** (Python package manager) - [Installation Guide](https://github.com/astral-sh/uv)
-- **Docker & Docker Compose** (for containerized setup)
-- **PostgreSQL** (optional, if not using SQLite)
-- **Redis** (optional, if not using Docker)
-
-## 🛠️ Installation
-
-### Option 1: Local Development Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd dj-template
-   ```
-
-2. **Install UV** (if not already installed)
-   ```bash
-   # On macOS/Linux
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-
-   # On Windows (PowerShell)
-   powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-   ```
-
-3. **Install dependencies using UV**
-   ```bash
-   uv sync
-   ```
-
-4. **Set up environment variables**
-   ```bash
-   # The .env file should already exist in the project
-   # If not, create one based on the configuration below
-   # Make sure to update SECRET_KEY and other sensitive values
-   ```
-
-5. **Configure your .env file**
-
-   Edit the `.env` file with your configuration:
-   ```env
-   # Django Environment
-   DJANGO_ENV=local
-
-   # Secret Key (Generate a new one for production!)
-   SECRET_KEY=your-secret-key-here
-
-   # Database Configuration
-   DATABASE_TYPE=sqlite  # or 'postgres' for PostgreSQL
-
-   # If using PostgreSQL
-   DB_NAME=postgres
-   DB_USER=postgres
-   DB_PASSWORD=postgres
-   DB_HOST=localhost
-   DB_PORT=5432
-
-   # Redis Configuration
-   REDIS_URL=redis://localhost:6379/0
-
-   # Celery Configuration
-   CELERY_BROKER_URL=redis://localhost:6379/0
-   CELERY_RESULT_BACKEND=redis://localhost:6379/0
-   ```
-
-6. **Activate the virtual environment**
-   ```bash
-   # UV creates a virtual environment automatically
-   # Activate it:
-   source .venv/bin/activate  # On macOS/Linux
-   # or
-   .venv\Scripts\activate  # On Windows
-   ```
-
-7. **Run migrations**
-   ```bash
-   cd core
-   python manage.py migrate
-   ```
-
-8. **Create a superuser** (optional)
-   ```bash
-   python manage.py createsuperuser
-   ```
-
-   Or use the seed command:
-   ```bash
-   python manage.py seed_users
-   ```
-
-   The seed command supports custom options:
-   ```bash
-   # Custom email and password
-   python manage.py seed_users --email admin@yourdomain.com --password securepass123
-
-   # Force update if user exists
-   python manage.py seed_users --force
-
-   # See all options
-   python manage.py seed_users --help
-   ```
-
-9. **Run the development server**
-   ```bash
-   python manage.py runserver
-   ```
-
-### Option 2: Docker Setup (Recommended)
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd dj-template
-   ```
-
-2. **Create and configure .env file**
-   ```bash
-   # Create .env file in the root directory
-   # Make sure DATABASE_TYPE=postgres for Docker setup
-   ```
-
-3. **Build and start containers**
-   ```bash
-   docker-compose up --build
-   ```
-
-   This will start:
-   - **Web server** (Django) on port 8000
-   - **PostgreSQL database**
-   - **Redis server**
-   - **Celery worker**
-   - **Celery beat** (scheduler)
-
-4. **Run migrations** (first time only)
-   ```bash
-   docker-compose exec web python manage.py migrate
-   ```
-
-5. **Create superuser** (optional)
-   ```bash
-   docker-compose exec web python manage.py createsuperuser
-   ```
-
-6. **Access the application**
-   - API: http://localhost:8000
-   - Swagger UI: http://localhost:8000/swagger/
-   - ReDoc: http://localhost:8000/redoc/
-   - Admin Panel: http://localhost:8000/admin/
-
-## 📁 Project Structure
-
-```
-dj-template/
-├── core/                      # Django project root
-│   ├── accounts/              # Custom user authentication app
-│   │   ├── models.py          # Custom User model
-│   │   ├── serializers.py    # User serializers
-│   │   ├── views.py          # Authentication views (register, login, logout)
-│   │   ├── urls.py           # Account URLs
-│   │   └── management/       # Management commands
-│   │       └── commands/     # Custom commands
-│   │           └── seed_users.py  # Seed initial users command
-│   ├── commons/               # Common utilities app (your custom apps go here)
-│   ├── core/                  # Django project settings
-│   │   ├── settings/          # Environment-based settings
-│   │   │   ├── base.py        # Base settings
-│   │   │   ├── local.py       # Local development
-│   │   │   ├── dev.py         # Development environment
-│   │   │   └── prod.py        # Production environment
-│   │   ├── utils/             # Utility functions
-│   │   │   └── message.py    # Standardized API messages
-│   │   ├── celery.py          # Celery configuration
-│   │   └── urls.py           # Main URL configuration
-│   └── manage.py             # Django management script
-├── Dockerfile                 # Docker image definition
-├── docker-compose.yml        # Docker Compose configuration
-├── entrypoint.sh             # Container entrypoint script
-├── pyproject.toml           # Project dependencies (UV)
-├── .env                      # Environment variables (not in git)
-└── README.md                # This file
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-The project uses a `.env` file for configuration. Key variables:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DJANGO_ENV` | Environment (local/dev/prod) | `local` |
-| `SECRET_KEY` | Django secret key | (required) |
-| `DATABASE_TYPE` | Database type (sqlite/postgres) | `sqlite` |
-| `DB_NAME` | PostgreSQL database name | `postgres` |
-| `DB_USER` | PostgreSQL username | `postgres` |
-| `DB_PASSWORD` | PostgreSQL password | `postgres` |
-| `DB_HOST` | Database host | `localhost` |
-| `DB_PORT` | Database port | `5432` |
-| `REDIS_URL` | Redis connection URL | `redis://localhost:6379/0` |
-| `CELERY_BROKER_URL` | Celery broker URL | `redis://localhost:6379/0` |
-| `CELERY_RESULT_BACKEND` | Celery result backend | `redis://localhost:6379/0` |
-| `ALLOWED_HOSTS` | Allowed hosts (comma-separated) | `localhost,127.0.0.1` |
-| `CORS_ALLOWED_ORIGINS` | CORS origins (comma-separated) | `http://localhost:3000` |
-| `JWT_ACCESS_TOKEN_LIFETIME_MINUTES` | JWT access token lifetime | `60` |
-| `JWT_REFRESH_TOKEN_LIFETIME_DAYS` | JWT refresh token lifetime | `7` |
-| `DRF_PAGE_SIZE` | API pagination size | `20` |
-| `LANGUAGE_CODE` | Language code | `en-us` |
-| `TIME_ZONE` | Timezone | `UTC` |
-
-### Database Configuration
-
-#### Using SQLite (Default)
-```env
-DATABASE_TYPE=sqlite
-```
-No additional configuration needed. Database file will be created at `core/db.sqlite3`.
-
-#### Using PostgreSQL
-```env
-DATABASE_TYPE=postgres
-DB_NAME=your_db_name
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-DB_HOST=localhost
-DB_PORT=5432
-```
-
-## 🚀 Running the Project
-
-### Local Development
-
-```bash
-# Activate virtual environment
-source .venv/bin/activate  # macOS/Linux
-.venv\Scripts\activate     # Windows
-
-# Run migrations
-cd core
-python manage.py migrate
-
-# Run development server
-python manage.py runserver
-
-# Run Celery worker (in separate terminal)
-celery -A core worker --loglevel=info
-
-# Run Celery beat (in separate terminal)
-celery -A core beat --loglevel=info
-```
-
-### Docker
-
-```bash
-# Start all services
-docker-compose up
-
-# Start in detached mode
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop all services
-docker-compose down
-
-# Rebuild containers
-docker-compose up --build
-
-# Run management commands
-docker-compose exec web python manage.py <command>
-```
-
-## 📚 API Endpoints
-
-### Authentication
-
-- **POST** `/api/accounts/register/` - Register a new user
-  ```json
-  {
-    "email": "user@example.com",
-    "password": "securepassword",
-    "password2": "securepassword",
-    "first_name": "John",
-    "last_name": "Doe"
-  }
-  ```
-
-- **POST** `/api/accounts/login/` - Login and get JWT tokens
-  ```json
-  {
-    "email": "user@example.com",
-    "password": "securepassword"
-  }
-  ```
-
-- **POST** `/api/accounts/logout/` - Logout (requires authentication)
-  ```json
-  {
-    "refresh_token": "your_refresh_token"
-  }
-  ```
-
-### API Documentation
-
-- **Swagger UI**: http://localhost:8000/swagger/
-- **ReDoc**: http://localhost:8000/redoc/
-- **JSON Schema**: http://localhost:8000/swagger.json
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-python manage.py test
-
-# Run tests for a specific app
-python manage.py test accounts
-
-# Run with coverage
-coverage run --source='.' manage.py test
-coverage report
-```
-
-## 🔐 Security Notes
-
-1. **Never commit `.env` file** - It contains sensitive information
-2. **Change SECRET_KEY** in production
-3. **Use strong passwords** for database and admin users
-4. **Enable HTTPS** in production (`SECURE_SSL_REDIRECT=True`)
-5. **Configure ALLOWED_HOSTS** properly for production
-6. **Review CORS settings** before deploying
-
-## 🛠️ Common Commands
-
-```bash
-# Create a new app
-python manage.py startapp app_name
-
-# Make migrations
-python manage.py makemigrations
-
-# Apply migrations
-python manage.py migrate
-
-# Create superuser
-python manage.py createsuperuser
-
-# Collect static files
-python manage.py collectstatic
-
-# Seed initial users
-python manage.py seed_users
-
-# Seed with custom values
-python manage.py seed_users --email admin@yourdomain.com --password securepass123
-
-# Force update existing user
-python manage.py seed_users --force
-
-# Access Django shell
-python manage.py shell
-
-# Access database shell
-python manage.py dbshell
-```
-
-## 🐳 Docker Commands
-
-```bash
-# Build images
-docker-compose build
-
-# Start services
-docker-compose up
-
-# Stop services
-docker-compose down
-
-# View logs
-docker-compose logs -f web
-docker-compose logs -f celery_worker
-
-# Execute commands in container
-docker-compose exec web python manage.py migrate
-docker-compose exec web python manage.py createsuperuser
-
-# Access container shell
-docker-compose exec web sh
-
-# Remove volumes (clean database)
-docker-compose down -v
-```
-
-## 🐛 Troubleshooting
-
-### Database Connection Issues
-
-**Problem**: Cannot connect to PostgreSQL
-- Check if PostgreSQL is running
-- Verify database credentials in `.env`
-- Ensure `DATABASE_TYPE=postgres` is set
-
-**Problem**: SQLite database locked
-- Close any other connections to the database
-- Restart the development server
-
-### Redis Connection Issues
-
-**Problem**: Celery cannot connect to Redis
-- Check if Redis is running: `redis-cli ping`
-- Verify `CELERY_BROKER_URL` in `.env`
-- For Docker, ensure Redis service is running
-
-### Migration Issues
-
-**Problem**: Migration conflicts
-```bash
-# Reset migrations (development only!)
-python manage.py migrate accounts zero
-python manage.py migrate accounts
-```
-
-### Port Already in Use
-
-**Problem**: Port 8000 is already in use
-```bash
-# Use a different port
-python manage.py runserver 8001
-
-# Or find and kill the process
-lsof -ti:8000 | xargs kill  # macOS/Linux
-```
-
-### Docker Issues
-
-**Problem**: Container won't start
-```bash
-# Check logs
-docker-compose logs web
-
-# Rebuild containers
-docker-compose down
-docker-compose up --build
-```
-
-## 📦 Dependencies
-
-Key dependencies (managed by UV):
-
-- **Django 5.2.8+** - Web framework
-- **Django REST Framework** - REST API toolkit
-- **djangorestframework-simplejwt** - JWT authentication
-- **drf-yasg** - API documentation
-- **Celery** - Asynchronous task queue
-- **Redis** - Message broker and cache
-- **Gunicorn** - Production WSGI server
-- **psycopg2-binary** - PostgreSQL adapter
-- **python-dotenv** - Environment variable management
-- **django-cors-headers** - CORS handling
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
-
-For issues and questions:
-- Open an issue on GitHub
-- Check the API documentation at `/swagger/`
-- Review the Django and DRF documentation
-
-## 🎯 Next Steps
-
-After setting up the project:
-
-1. **Customize the User model** if needed (already configured)
-2. **Add your apps** to `LOCAL_APPS` in `settings/base.py`
-3. **Configure email settings** for production
-4. **Set up CI/CD** pipeline
-5. **Configure logging** for your environment
-6. **Add monitoring** and error tracking
-7. **Set up backup** strategy for database
+This project is a high-performance Django REST Framework backend that powers intelligent, RAG-capable AI agents for restaurants. Built with **Django**, **Agno (formerly Phidata)**, and **ChromaDB**, it allows each restaurant to have its own dedicated AI assistant that knows its specific menu, ingredients, and policies.
 
 ---
 
-**Happy Coding! 🚀**
+## 🧠 Core Architecture: RAG & Agents
+
+This project distinguishes itself by implementing a robust **Multi-Tenant RAG (Retrieval-Augmented Generation)** architecture. Here is a deep dive into how the AI and data retrieval systems are managed.
+
+### 1. The Agent Framework (Agno)
+We use **[Agno](https://github.com/agno-agi/agno)** (formerly Phidata) as the orchestration framework for our AI agents. Agno provides the structure for:
+-   **Knowledge Base Integration**: Seamless connection to vector databases.
+-   **Memory Management**: handling conversation context.
+-   **Tool Use**: Enabling the agent to perform specific actions (like searching the database).
+
+### 2. Multi-Tenant RAG Implementation
+Unlike simple RAG systems that dump all data into one index, this project implements strict **data isolation** for a SaaS model.
+
+*   **Vector Database**: We use **ChromaDB** for storing vector embeddings.
+*   **Dynamic Collections**:
+    *   Each restaurant gets its **own dedicated collection** in ChromaDB.
+    *   The collection name is dynamically generated using the restaurant's unique ID: `restaurant_{restaurant_uid}`.
+    *   This ensures that when a user asks about "Pizza" at *Restaurant A*, the AI never accidentally retrieves menu items from *Restaurant B*.
+
+**Code Reference**: `core/chat/knowledge.py`
+```python
+def get_restaurant_knowledge(restaurant_uid: str) -> Knowledge:
+    # ...
+    collection_name = f"restaurant_{restaurant_uid}"
+    vector_db = get_chroma_db(collection_name)
+    # ...
+```
+
+### 3. The "Restaurant Agent"
+The `RestaurantAgent` is a specialized class designed to act as a professional customer service representative.
+
+*   **Model**: Powered by OpenAI's `gpt-4o-mini` for a balance of speed and intelligence.
+*   **Instructions**: The agent is prompted to:
+    *   ALWAYS search the knowledge base first for menu/price info.
+    *   Never hallucinate information not present in the derived context.
+    *   Handle allergy queries by strictly checking ingredient lists.
+*   **Context Injection**: When a user queries, the relevant "chunks" of menu data are retrieved from ChromaDB and injected directly into the LLM's system prompt before it generates an answer.
+
+**Code Reference**: `core/chat/agent.py`
+
+### 4. Smart Memory & Summarization
+To keep costs low and context windows manageable, we use a **Rolling Summary** technique instead of sending the entire chat history every time.
+
+1.  **Thread Storage**: The `Thread` model in Django stores the current `summary`.
+2.  **Update Loop**: After every turn (User Message + AI Response), a secondary "Summarizer Agent" runs.
+3.  **Optimization**: This agent reads the *old summary* + *new interaction* and compresses it into a *new summary*.
+4.  **Result**: The main agent always knows the user's name and dietary preferences from 100 messages ago, without processing 100 messages worth of tokens.
+
+---
+
+## 🛠️ Technology Stack
+
+*   **Backend Framework**: Django 5 + Django REST Framework (DRF)
+*   **AI Framework**: Agno (v2)
+*   **Vector Database**: ChromaDB (Running locally in Docker via persistent volume)
+*   **LLM Provider**: OpenAI (GPT-4o-mini)
+*   **Task Queue**: Celery + Redis (For background processing, future embedding updates)
+*   **Database**: PostgreSQL
+*   **Containerization**: Docker & Docker Compose
+
+---
+
+## 📂 Project Structure
+
+```
+├── core/
+│   ├── chat/              # 🧠 THE BRAIN: Agent & RAG Logic
+│   │   ├── agent.py       # RestaurantAgent & Summarizer definitions
+│   │   ├── knowledge.py   # ChromaDB connection & Collection management
+│   │   └── views.py       # API Endpoint coupling Django with Agno
+│   ├── restaurants/       # Standard Django app for Restaurant models
+│   ├── chroma_data/       # 💾 Persistent storage for Vector Embeddings
+│   └── ...
+├── docker-compose.yml     # Orchestration for Web, DB, Redis, Celery
+└── verify_chat.py         # Script to test the Agent API
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+*   Docker & Docker Compose
+*   OpenAI API Key
+
+### 1. Setup Environment
+Create a `.env` file in the root directory:
+
+```env
+# Core Django
+DJANGO_ENV=local
+SECRET_KEY=your_secret_key
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database (Docker)
+DATABASE_TYPE=postgres
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=db
+DB_PORT=5432
+
+# Redis & Celery
+REDIS_URL=redis://redis:6379/0
+CELERY_BROKER_URL=redis://redis:6379/0
+CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+# AI & RAG
+OPENAI_API_KEY=sk-your-openai-key-here
+CHROMA_DB_PATH=chroma_data
+```
+
+### 2. Run with Docker
+Start the entire stack (Django, Postgres, Redis, Celery):
+
+```bash
+docker-compose up --build
+```
+
+### 3. Initialize Data
+Once the containers are running, apply migrations and create a superuser:
+
+```bash
+# Run migrations
+docker-compose exec web python manage.py migrate
+
+# Create admin user
+docker-compose exec web python manage.py createsuperuser
+```
+
+---
+
+## 🔌 API Usage
+
+### Chat with an Agent
+**Endpoint**: `POST /api/chat/<restaurant_uid>/`
+
+**Reference**: `core/chat/views.py`
+
+#### 1. Start a New Conversation
+```json
+// POST /api/chat/123-abc-456/
+{
+  "message": "Do you have any vegan pizzas?"
+}
+```
+
+**Response:**
+```json
+{
+  "thread_uid": "uuid-of-new-thread",
+  "ai_response": "Yes! We have the 'Garden Delight' pizza which features...",
+  "created_at": "2024-03-20T10:00:00Z"
+}
+```
+
+#### 2. Continue Conversation
+Pass the `thread_uid` to maintain memory (context).
+
+```json
+// POST /api/chat/123-abc-456/
+{
+  "thread_uid": "uuid-of-new-thread",
+  "message": "How much does that cost?"
+}
+```
+
+---
+
+## 🧪 Testing
+We have provided a verification script to test the interaction flow:
+
+```bash
+# Edit the script to add a valid RESTAURANT_UID first!
+python verify_chat.py
+```
+
+---
+
+## 📜 License
+This project is licensed under the MIT License.
