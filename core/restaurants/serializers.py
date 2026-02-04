@@ -3,7 +3,7 @@ from django.db import transaction
 
 from accounts.models import User
 from accounts.choices import UserRole
-from restaurants.models import Restaurant, Menu, Ingredients, MenuIngredientsConnector
+from restaurants.models import Restaurant, Menu, Ingredients, MenuIngredientsConnector, Allergen
 
 
 class RestaurantSerializer(serializers.ModelSerializer):
@@ -58,37 +58,52 @@ class RestaurantCreateWithOwnerSerializer(serializers.Serializer):
             }
 
 
+
+class AllergenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Allergen
+        fields = ['id', 'name', 'name_ja', 'allergen_type']
+
+
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredients
-        fields = '__all__'
+        fields = ['id', 'restaurant', 'name', 'description', 'image', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at', 'restaurant']
 
 
 class MenuSerializer(serializers.ModelSerializer):
     ingredient_ids = serializers.ListField(
-        child=serializers.IntegerField(), required=False, help_text='Ingredient names separated by comma.'
+        child=serializers.IntegerField(), required=False, help_text='Ingredient IDs.'
     )
     ingredient_names = serializers.ListField(
-        child=serializers.CharField(),  required=False, help_text='Ingredient names separated by comma.'
+        child=serializers.CharField(),  required=False, help_text='Ingredient names.'
+    )
+    allergen_ids = serializers.ListField(
+        child=serializers.IntegerField(), required=False, write_only=True
     )
 
-    ingredients = IngredientSerializer(many=True, read_only=True, source='menuingredientsconnector_set.ingredient') # Incorrect source, need to handle deeper but simple for now
+    ingredients = IngredientSerializer(many=True, read_only=True, source='menuingredientsconnector_set.ingredient')
+    allergens = AllergenSerializer(many=True, read_only=True)
 
     class Meta:
         model = Menu
-        fields = ['id', 'restaurant', 'name', 'description', 'image', 'price', 'ingredient_ids', 'ingredient_names', 'ingredients', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at', 'restaurant', 'ingredients']
-        write_only_fields = ['ingredient_ids', 'ingredient_names']
+        fields = ['id', 'restaurant', 'name', 'description', 'image', 'price', 'ingredient_ids', 'ingredient_names', 'ingredients', 'allergens', 'allergen_ids', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'restaurant', 'ingredients', 'allergens']
+        write_only_fields = ['ingredient_ids', 'ingredient_names', 'allergen_ids']
 
     def create(self, validated_data):
         ingredient_ids = validated_data.pop('ingredient_ids', [])
         ingredient_names = validated_data.pop('ingredient_names', [])
+        allergen_ids = validated_data.pop('allergen_ids', [])
 
-        if ingredient_ids is [] and ingredient_names is []:
+        if not ingredient_ids and not ingredient_names:
             raise serializers.ValidationError({'ingredients': 'At least one ingredient is required.'})
 
         menu = super().create(validated_data)
+
+        if allergen_ids:
+            menu.allergens.set(allergen_ids)
 
         if ingredient_names:
             for ingredient_name in ingredient_names:
@@ -102,15 +117,19 @@ class MenuSerializer(serializers.ModelSerializer):
                     MenuIngredientsConnector.objects.create(menu=menu, ingredient=ingredient,
                                                             restaurant=menu.restaurant)
                 except Ingredients.DoesNotExist:
-                    pass  # or raise error
+                    pass
         return menu
 
     def update(self, instance, validated_data):
         ingredient_ids = validated_data.pop('ingredient_ids', None)
+        allergen_ids = validated_data.pop('allergen_ids', None)
+
         menu = super().update(instance, validated_data)
 
+        if allergen_ids is not None:
+            menu.allergens.set(allergen_ids)
+
         if ingredient_ids is not None:
-            # Clear existing connections? Or standard set sync. Simple clear and add for now.
             MenuIngredientsConnector.objects.filter(menu=menu).delete()
             for ingredient_id in ingredient_ids:
                 try:

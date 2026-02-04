@@ -17,12 +17,26 @@ class Restaurant(BaseModel):
         return f"{self.name} - {self.owner}"
 
 
+class Allergen(BaseModel):
+    ALLERGEN_TYPES = (
+        ('mandatory', 'Mandatory'),
+        ('recommended', 'Recommended'),
+    )
+    name = models.CharField(max_length=255)
+    name_ja = models.CharField(max_length=255, help_text="Japanese name of the allergen")
+    allergen_type = models.CharField(max_length=20, choices=ALLERGEN_TYPES)
+
+    def __str__(self):
+        return f"{self.name} ({self.name_ja})"
+
+
 class Menu(BaseModel):
     restaurant = models.ForeignKey('restaurants.Restaurant', on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='restaurant/menus/', blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    allergens = models.ManyToManyField(Allergen, blank=True, related_name='menus')
 
     def __str__(self):
         return f"{self.name} - {self.restaurant}"
